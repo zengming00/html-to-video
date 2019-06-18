@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" style="background:white">
+
+<head>
+    <title>test</title>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+    <button id="btnTest">test</button>
+    <button id="btnClose">close</button>
+    <script>
+        var electron = require('electron');
+
+        btnTest.onclick = function () {
+            electron.desktopCapturer.getSources({ types: ['window', 'screen'] }, function (error, sources) {
+                if (error) {
+                    throw error;
+                }
+                for (const src of sources) {
+                    console.log(src);
+                }
+            });
+        }
+
+        btnClose.onclick = function () {
+            const win = electron.remote.getCurrentWindow()
+            win.close();
+        }
+    </script>
+</body>
+
+</html>

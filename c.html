@@ -1,0 +1,25 @@
+<html>
+
+<head>
+    <title>foo</title>
+</head>
+
+<body>
+    <p id='p' style="font-size: 100px"></p>
+
+    <script>
+        const p = document.querySelector('#p');
+        let i = 0;
+        setInterval(() => {
+            i++;
+            p.innerHTML = i
+            if (i === 5) {
+                console.log('start')
+            } else if (i === 10) {
+                console.log('stop')
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>

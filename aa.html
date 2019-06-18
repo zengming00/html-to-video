@@ -1,0 +1,20 @@
+<html style="background:white">
+<p id="a" style="font-size:150px">0</p>
+<script>
+    var v = 0;
+    setInterval(function () {
+        if (window.callPhantom) {
+            if (v === 5) {
+                var callbackResponse = window.callPhantom({ start: true });
+                console.log(callbackResponse)
+            } else if (v === 15) {
+                var callbackResponse = window.callPhantom({ stop: true });
+                console.log(callbackResponse)
+            }
+        }
+        v++;
+        document.getElementById('a').innerText = v;
+    }, 1000);
+</script>
+
+</html>

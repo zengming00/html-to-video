@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" style="background:white; width:100%; height:100%;cursor:not-allowed;">
+
+<head>
+    <title>H5ToVideo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="width:100%;height:100%;margin:0;">
+    <webview id="webview" style="height:100%;"></webview>
+    <script>
+        let localStream, recorder, recordChunk;
+        const SECRET_KEY = 'H5ToVideo';
+        const electron = require('electron');
+        const fs = require('fs');
+        const win = electron.remote.getCurrentWindow()
+
+
+        const webview = document.getElementById('webview');
+
+        const ipcRenderer = electron.ipcRenderer;
+        webview.src = ipcRenderer.sendSync('message', 'getURL');
+
+        webview.addEventListener('console-message', (e) => {
+            const msg = e.message;
+            switch (msg) {
+                case 'start':
+                    startRec();
+                    break;
+                case 'stop':
+                    stopRec();
+                    break;
+                default:
+                    console.log(msg);
+            }
+        })
+
+
+        function handleStream(stream) {
+            console.log('handstr:', stream)
+            localStream = stream;
+        }
+
+        function handleUserMediaError(e) {
+            console.error('handleUserMediaError', e);
+        }
+
+        electron.desktopCapturer.getSources({ types: ['window', 'screen'] }, function (error, sources) {
+            if (error) throw error;
+            for (const src of sources) {
+                console.log(src.name);
+                if (src.name === SECRET_KEY) {
+                    navigator.webkitGetUserMedia({
+                        audio: false,
+                        video: {
+                            mandatory: {
+                                chromeMediaSource: 'desktop',
+                                chromeMediaSourceId: src.id,
+                                minWidth: 480,
+                                maxWidth: 480,
+                                minHeight: 800,
+                                maxHeight: 800,
+                            }
+                        }
+                    }, handleStream, handleUserMediaError);
+                    return;
+                }
+            }
+        });
+
+        function startRec() {
+            recorder = new MediaRecorder(localStream);
+            recorder.ondataavailable = e => {
+                console.log("ondataavailable :", e)
+                recordChunk.push(e.data);
+            };
+            recordChunk = [];
+            recorder.start();
+        }
+
+        function stopRec() {
+            recorder.stop();
+            setTimeout(() => {
+                const blob = new Blob(recordChunk);
+                let fr = new FileReader();
+                fr.onload = function () {
+                    let arrayBuffer = fr.result;
+                    let buffer = new Buffer(arrayBuffer);
+                    fs.writeFileSync('./m.webm', buffer);
+                    console.log('saved')
+                    close();
+                }
+                fr.readAsArrayBuffer(blob);
+            }, 1);
+        }
+
+        function close() {
+            win.close();
+        }
+
+        // setTimeout(() => {
+        //     // win.minimize()
+        //     // startRec();
+        // }, 1000);
+        // setTimeout(() => {
+        //     // stopRec()
+        // }, 10 * 1000);
+    </script>
+</body>
+
+</html>
